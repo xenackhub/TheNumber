@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
-    :root {
+    :root, body[data-theme="amber"] {
       --bg: #140b07;
       --panel: rgba(42, 22, 12, 0.82);
       --line: rgba(255, 186, 120, 0.22);
@@ -19,6 +19,54 @@
       --cream: #ffe7c2;
       --ok: #7dffb0;
       --danger: #ff6b6b;
+    }
+    body[data-theme="ocean"] {
+      --bg: #07141c;
+      --panel: rgba(10, 32, 46, 0.84);
+      --line: rgba(120, 210, 255, 0.22);
+      --text: #e8f7ff;
+      --muted: #8fb6c9;
+      --gold: #5ce1ff;
+      --accent: #3b82f6;
+      --cream: #cfefff;
+      --ok: #7dffb0;
+      --danger: #ff6b6b;
+    }
+    body[data-theme="grape"] {
+      --bg: #120814;
+      --panel: rgba(36, 16, 46, 0.84);
+      --line: rgba(220, 160, 255, 0.22);
+      --text: #f6eaff;
+      --muted: #c3a4d6;
+      --gold: #d946ef;
+      --accent: #a855f7;
+      --cream: #f3d9ff;
+      --ok: #7dffb0;
+      --danger: #ff6b6b;
+    }
+    body[data-theme="mint"] {
+      --bg: #07140f;
+      --panel: rgba(12, 36, 28, 0.84);
+      --line: rgba(140, 255, 200, 0.22);
+      --text: #e9fff6;
+      --muted: #95c7b4;
+      --gold: #34d399;
+      --accent: #10b981;
+      --cream: #d7ffef;
+      --ok: #7dffb0;
+      --danger: #ff6b6b;
+    }
+    body[data-theme="light"] {
+      --bg: #f4efe6;
+      --panel: rgba(255, 252, 246, 0.9);
+      --line: rgba(160, 120, 70, 0.25);
+      --text: #3a2716;
+      --muted: #8a6a4e;
+      --gold: #e39b00;
+      --accent: #d97706;
+      --cream: #7a4f20;
+      --ok: #059669;
+      --danger: #dc2626;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -96,7 +144,7 @@
     .sub { color: var(--muted); margin-bottom: 22px; font-size: 14px; }
 
     label { display: block; font-size: 13px; color: var(--muted); margin: 0 0 6px 4px; }
-    input[type="text"], input[type="password"], input[type="number"] {
+    input[type="text"], input[type="password"], input[type="number"], select {
       width: 100%;
       background: rgba(20, 10, 6, 0.72);
       border: 1px solid var(--line);
@@ -108,9 +156,16 @@
       outline: none;
       margin-bottom: 14px;
     }
-    input:focus {
+    input:focus, select:focus {
       border-color: var(--gold);
       box-shadow: 0 0 0 3px rgba(255, 183, 3, 0.16);
+    }
+    select {
+      appearance: none;
+      background-image: linear-gradient(45deg, transparent 50%, #ffb703 50%), linear-gradient(135deg, #ffb703 50%, transparent 50%);
+      background-position: calc(100% - 20px) calc(1.1em + 2px), calc(100% - 14px) calc(1.1em + 2px);
+      background-size: 6px 6px, 6px 6px;
+      background-repeat: no-repeat;
     }
 
     .btn {
@@ -320,9 +375,36 @@
       pointer-events: none;
       z-index: 21;
     }
+
+    .theme-bar {
+      width: min(560px, 100%);
+      margin-top: 14px;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--panel);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .theme-bar span { font-size: 12px; color: var(--muted); }
+    .swatches { display: flex; gap: 8px; }
+    .swatches button {
+      width: 22px; height: 22px; border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.4);
+      cursor: pointer;
+    }
+    .swatches button[data-theme="amber"] { background: #ffb703; }
+    .swatches button[data-theme="ocean"] { background: #5ce1ff; }
+    .swatches button[data-theme="grape"] { background: #d946ef; }
+    .swatches button[data-theme="mint"] { background: #34d399; }
+    .swatches button[data-theme="light"] { background: #f4efe6; border-color: #c9b79a; }
+    .swatches button.active { box-shadow: 0 0 0 2px var(--text); }
+    select option { color: #222; }
   </style>
 </head>
-<body>
+<body data-theme="amber">
   <div class="glow"></div>
 
   <div class="wrap">
@@ -351,12 +433,14 @@
       </div>
       <h1>เข้าชม</h1>
       <p class="sub">ใส่ชื่อเล่นกับห้องก่อนดูตัวเลข</p>
-      <div class="error" id="guestError">กรอกให้ครบ และห้องใส่ได้แค่ตัวเลขกับ /</div>
+      <div class="error" id="guestError">กรอกชื่อเล่น และเลือกห้องก่อน</div>
       <form id="guestForm" autocomplete="off">
         <label for="nick">ชื่อเล่น</label>
         <input id="nick" type="text" maxlength="24" placeholder="ชื่อเล่น" required />
         <label for="room">มาจากห้องไหน</label>
-        <input id="room" type="text" inputmode="numeric" placeholder="เช่น 3/2" required />
+        <select id="room" required>
+          <option value="">เลือกห้อง</option>
+        </select>
         <button class="btn btn-primary" type="submit">เข้าดู</button>
       </form>
       <button class="btn btn-ghost" id="backLoginBtn" type="button">กลับหน้าเพชร</button>
@@ -397,6 +481,17 @@
       <p class="guest-note hidden" id="guestNote">โหมดผู้ชม ดูได้อย่างเดียว กดลดเลขไม่ได้</p>
       <p class="hint" id="syncHint">กำลังเชื่อมที่เก็บกลาง ให้ทุกเครื่องเห็นเลขเดียวกัน</p>
     </section>
+
+    <div class="theme-bar">
+      <span>ธีมเครื่องนี้ ไม่กระทบคนอื่น</span>
+      <div class="swatches" id="swatches">
+        <button type="button" data-theme="amber" title="ทอง"></button>
+        <button type="button" data-theme="ocean" title="ฟ้า"></button>
+        <button type="button" data-theme="grape" title="ม่วง"></button>
+        <button type="button" data-theme="mint" title="เขียว"></button>
+        <button type="button" data-theme="light" title="สว่าง"></button>
+      </div>
+    </div>
   </div>
 
   <div class="goal" id="goal">
@@ -424,7 +519,8 @@
       role: "petch_role",
       guest: "petch_guest",
       count: "petch_count",
-      auto: "petch_auto"
+      auto: "petch_auto",
+      theme: "petch_theme"
     };
 
     const loginCard = document.getElementById("loginCard");
@@ -689,7 +785,7 @@
       e.preventDefault();
       const nick = document.getElementById("nick").value.trim();
       const room = roomInput.value.trim();
-      if (!nick || !/^[0-9/]+$/.test(room)) {
+      if (!nick || !room) {
         guestError.style.display = "block";
         return;
       }
@@ -702,9 +798,31 @@
       showApp();
     });
 
-    roomInput.addEventListener("input", () => {
-      roomInput.value = roomInput.value.replace(/[^0-9/]/g, "");
+    (function fillRooms() {
+      for (let y = 1; y <= 6; y++) {
+        for (let r = 1; r <= 8; r++) {
+          const opt = document.createElement("option");
+          opt.value = y + "/" + r;
+          opt.textContent = y + "/" + r;
+          roomInput.appendChild(opt);
+        }
+      }
+    })();
+
+    function applyTheme(name) {
+      const themes = ["amber", "ocean", "grape", "mint", "light"];
+      const theme = themes.indexOf(name) >= 0 ? name : "amber";
+      document.body.setAttribute("data-theme", theme);
+      localStorage.setItem(KEYS.theme, theme);
+      document.querySelectorAll("#swatches button").forEach((btn) => {
+        btn.classList.toggle("active", btn.getAttribute("data-theme") === theme);
+      });
+    }
+    document.getElementById("swatches").addEventListener("click", (e) => {
+      const btn = e.target.closest("button[data-theme]");
+      if (btn) applyTheme(btn.getAttribute("data-theme"));
     });
+    applyTheme(localStorage.getItem(KEYS.theme) || "amber");
 
     document.getElementById("toGuestBtn").addEventListener("click", showGuest);
     document.getElementById("backLoginBtn").addEventListener("click", showLogin);
