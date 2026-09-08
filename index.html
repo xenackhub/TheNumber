@@ -426,6 +426,1425 @@
     .msg .txt { font-size: 14px; color: var(--text); word-break: break-word; }
     .msg .meta { font-size: 11px; color: var(--muted); }
     .msg.deleted .txt { color: var(--muted); font-style: italic; }
+    .msg.vip .bubble {
+      background: rgba(255, 183, 3, 0.14);
+      border: 1px solid rgba(255, 183, 3, 0.35);
+      border-radius: 12px;
+      padding: 6px 8px;
+    }
+    .crown { font-size: 13px; }
+    .chat-form { display: flex; gap: 6px; padding: 8px; }
+    .chat-form input { margin: 0; }
+    .chat-form .btn { white-space: nowrap; padding: 0 12px; background: var(--gold); color: #2a1408; }
+    .modal {
+      position: fixed; inset: 0; z-index: 30; display: none; place-items: center;
+      background: rgba(8,4,2,0.72); padding: 16px;
+    }
+    .modal.show { display: grid; }
+    .modal .box {
+      width: min(420px, 100%); background: var(--panel); border: 1px solid var(--line);
+      border-radius: 22px; padding: 18px;
+    }
+    .av-preview { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; display: block; margin: 0 auto 12px; background: #5a3b24; }
+  </style>
+</head>
+<body data-theme="amber">
+  <div class="glow"></div>
+
+  <div class="wrap">
+    <section class="card" id="loginCard">
+      <div class="brand">
+        <div class="logo"><span class="dot"></span> GOAL Counter</div>
+        <span class="chip">PETCH SYSTEM</span>
+      </div>
+      <h1>เข้าสู่ระบบ</h1>
+      <p class="sub">หน้านี้สำหรับเพชรเท่านั้น</p>
+      <div class="error" id="loginError">ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง</div>
+      <form id="loginForm" autocomplete="off">
+        <label for="user">ชื่อผู้ใช้</label>
+        <input id="user" type="text" placeholder="User" required />
+        <label for="pass">รหัสผ่าน</label>
+        <input id="pass" type="password" placeholder="Password" required />
+        <button class="btn btn-primary" type="submit">เข้าสู่ระบบ</button>
+      </form>
+      <button class="btn btn-link" id="toGuestBtn" type="button">ถ้าไม่ใช่เพชร คลิกตรงนี้</button>
+    </section>
+
+    <section class="card hidden" id="guestCard">
+      <div class="brand">
+        <div class="logo"><span class="dot"></span> ผู้ชม</div>
+        <span class="chip">VIEW ONLY</span>
+      </div>
+      <h1>เข้าชม</h1>
+      <p class="sub">ใส่ชื่อเล่นกับห้องก่อนดูตัวเลข</p>
+      <div class="error" id="guestError">กรอกชื่อเล่น เลือกห้อง หรือชื่อนี้มีคนใช้อยู่บนเครื่องอื่น</div>
+      <form id="guestForm" autocomplete="off">
+        <label for="nick">ชื่อเล่น</label>
+        <input id="nick" type="text" maxlength="24" placeholder="ชื่อเล่น" required />
+        <label for="room">มาจากห้องไหน</label>
+        <select id="room" required>
+          <option value="">เลือกห้อง</option>
+        </select>
+        <button class="btn btn-primary" type="submit">เข้าดู</button>
+      </form>
+      <button class="btn btn-ghost" id="backLoginBtn" type="button">กลับหน้าเพชร</button>
+    </section>
+
+    <section class="card hidden" id="appCard">
+      <div class="topbar">
+        <div class="hello">
+          <span id="greetLine">ยินดีต้อนรับ <b>PETCH</b></span>
+          <span class="time" id="timeLine"></span>
+        </div>
+        <button class="btn btn-danger" id="logoutBtn" type="button">ออกจากระบบ</button>
+      </div>
+      <div class="counter-box">
+        <div class="label-remain">เหลืออีก</div>
+        <div class="number" id="countView">8,024</div>
+      </div>
+
+      <div class="admin-only" id="adminOnly">
+        <button class="btn hit" id="hitBtn" type="button">กด เพื่อลด 1</button>
+        <div class="row">
+          <button class="btn adj" id="minusBtn" type="button">− ลด</button>
+          <button class="btn adj" id="plusBtn" type="button">+ เพิ่ม</button>
+        </div>
+        <div class="set-row">
+          <input id="setInput" type="number" min="0" step="1" placeholder="ตั้งค่าตัวเลขใหม่" />
+          <button class="btn" id="setBtn" type="button">ตั้งค่า</button>
+        </div>
+        <div class="tools">
+          <label class="toggle">
+            <span class="switch" id="autoSwitch"><i></i></span>
+            นับอัตโนมัติ
+          </label>
+          <button class="btn btn-ghost" id="resetBtn" type="button">รีเซ็ตเป็น 8,024</button>
+        </div>
+      </div>
+
+      <p class="guest-note hidden" id="guestNote">โหมดผู้ชม ดูได้อย่างเดียว กดลดเลขไม่ได้</p>
+      <p class="hint" id="syncHint">กำลังเชื่อมที่เก็บกลาง ให้ทุกเครื่องเห็นเลขเดียวกัน</p>
+
+      <div class="chat-wrap">
+        <div class="chat-head">
+          <div class="chat-title">
+            แชทกลุ่ม
+            <span class="chat-count" id="chatCount">0</span>
+          </div>
+          <div class="chat-actions">
+            <button class="btn" id="profileBtn" type="button">โปรไฟล์</button>
+            <button class="btn hidden" id="archiveBtn" type="button">ข้อความที่ลบ</button>
+          </div>
+        </div>
+        <div class="chat-log" id="chatLog"></div>
+        <form class="chat-form" id="chatForm">
+          <input id="chatInput" type="text" maxlength="200" placeholder="พิมพ์ข้อความ..." />
+          <button class="btn" type="submit">ส่ง</button>
+        </form>
+      </div>
+    </section>
+
+    <div class="theme-bar">
+      <span>ธีมเครื่องนี้ ไม่กระทบคนอื่น</span>
+      <div class="swatches" id="swatches">
+        <button type="button" data-theme="amber" title="ทอง"></button>
+        <button type="button" data-theme="ocean" title="ฟ้า"></button>
+        <button type="button" data-theme="grape" title="ม่วง"></button>
+        <button type="button" data-theme="mint" title="เขียว"></button>
+        <button type="button" data-theme="light" title="สว่าง"></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="goal" id="goal">
+    <div class="goal-card">
+      <div class="trophy">🏆</div>
+      <h2>GOAL</h2>
+      <p>สุดยอดเลย PETCH!<br>นับครบแล้ว ภารกิจสำเร็จ</p>
+      <button class="btn btn-primary" id="againBtn" type="button">เริ่มใหม่ที่ 8,024</button>
+    </div>
+  </div>
+  <canvas id="confetti"></canvas>
+
+  <div class="modal" id="profileModal">
+    <div class="box">
+      <h1 style="font-size:22px">ตั้งค่าโปรไฟล์</h1>
+      <p class="sub">ชื่อที่โชว์ในแชท และรูปจากเครื่องนี้</p>
+      <img class="av-preview" id="avPreview" alt="" />
+      <label for="displayName">ชื่อที่แสดง</label>
+      <input id="displayName" type="text" maxlength="24" />
+      <label for="avatarFile">รูปโปรไฟล์</label>
+      <input id="avatarFile" type="file" accept="image/*" />
+      <label for="badgeSize">ขนาดตัวเลขแชท</label>
+      <input id="badgeSize" type="number" min="10" max="28" value="13" />
+      <label for="badgeColor">สีตัวเลขแชท</label>
+      <input id="badgeColor" type="text" value="#ffb703" />
+      <button class="btn btn-primary" id="saveProfileBtn" type="button">บันทึก</button>
+      <button class="btn btn-ghost" id="closeProfileBtn" type="button">ปิด</button>
+    </div>
+  </div>
+
+  <div class="modal" id="viewModal">
+    <div class="box">
+      <img class="av-preview" id="viewAv" alt="" />
+      <h1 id="viewName" style="font-size:22px;text-align:center">โปรไฟล์</h1>
+      <p class="sub" id="viewMeta" style="text-align:center"></p>
+      <button class="btn btn-primary" id="closeViewBtn" type="button">ปิด</button>
+    </div>
+  </div>
+
+  <div class="modal" id="archiveModal">
+    <div class="box">
+      <h1 style="font-size:22px">ข้อความที่ลบ / หมดอายุ</h1>
+      <p class="sub">เห็นเฉพาะเพชร คนอื่นไม่เห็น</p>
+      <div class="chat-log" id="archiveLog"></div>
+      <button class="btn btn-primary" id="closeArchiveBtn" type="button">ปิด</button>
+    </div>
+  </div>
+
+  <script>
+    const DEFAULT_COUNT = 8024;
+    const CRED_HASH = "d2f882071b70e2547761208cbf5ac8a19cd48e55715e1c3ea6efeffe0db40eb3";
+    const CLOUD = {
+      base: "https://abacus.jasoncameron.dev",
+      ns: "xenackhub-thenumber",
+      key: "remain"
+    };
+    const KEYS = {
+      guest: "petch_guest",
+      count: "petch_count",
+      auto: "petch_auto",
+      theme: "petch_theme",
+      sess: "petch_sess"
+    };
+
+    const loginCard = document.getElementById("loginCard");
+    const guestCard = document.getElementById("guestCard");
+    const appCard = document.getElementById("appCard");
+    const loginForm = document.getElementById("loginForm");
+    const guestForm = document.getElementById("guestForm");
+    const loginError = document.getElementById("loginError");
+    const guestError = document.getElementById("guestError");
+    const countView = document.getElementById("countView");
+    const goalEl = document.getElementById("goal");
+    const autoSwitch = document.getElementById("autoSwitch");
+    const setInput = document.getElementById("setInput");
+    const syncHint = document.getElementById("syncHint");
+    const greetLine = document.getElementById("greetLine");
+    const timeLine = document.getElementById("timeLine");
+    const adminOnly = document.getElementById("adminOnly");
+    const guestNote = document.getElementById("guestNote");
+    const roomInput = document.getElementById("room");
+
+    let count = DEFAULT_COUNT;
+    let autoOn = false;
+    let timer = null;
+    let pollTimer = null;
+    let clockTimer = null;
+    let celebrating = false;
+    let busy = false;
+    let role = "guest";
+    let guest = { nick: "", room: "" };
+    let writeKey = "";
+    let deviceId = localStorage.getItem("petch_device") || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
+    localStorage.setItem("petch_device", deviceId);
+    let heartTimer = null;
+    const TWO_DAYS = 2 * 24 * 60 * 60 * 1000;
+    const BOARD_KEY = "petch_board_v1";
+    const CHAT_UI_KEY = "petch_chat_ui";
+    const CHAT_API = "https://crudcrud.com/api/b65493cce4c94addbd6236d0094cc856/board/6a9fec2ebb18f003e8087d15";
+    let cloudBoard = null;
+
+    function loadBoard() {
+      try { return JSON.parse(localStorage.getItem(BOARD_KEY) || "{}"); } catch (e) { return {}; }
+    }
+    function normalizeBoard(board) {
+      board = board || {};
+      if (!board.messages) board.messages = [];
+      if (!board.archive) board.archive = [];
+      if (!board.profiles) board.profiles = {};
+      if (!board.locks) board.locks = {};
+      if (!board.highlights) board.highlights = ["PETCH"];
+      if (board.highlights.indexOf("PETCH") < 0) board.highlights.unshift("PETCH");
+      return board;
+    }
+    function boardState() {
+      return normalizeBoard(cloudBoard || loadBoard());
+    }
+    function saveBoard(board) {
+      board = normalizeBoard(board);
+      cloudBoard = board;
+      localStorage.setItem(BOARD_KEY, JSON.stringify(board));
+      try { new BroadcastChannel("petch-board").postMessage("upd"); } catch (e) {}
+      const copy = JSON.parse(JSON.stringify(board));
+      delete copy._id;
+      fetch(CHAT_API, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(copy)
+      }).catch(() => {});
+    }
+    async function pullBoard() {
+      try {
+        const res = await fetch(CHAT_API);
+        if (!res.ok) throw new Error("board");
+        const data = await res.json();
+        delete data._id;
+        cloudBoard = normalizeBoard(data);
+        localStorage.setItem(BOARD_KEY, JSON.stringify(cloudBoard));
+      } catch (err) {
+        cloudBoard = normalizeBoard(loadBoard());
+      }
+      return cloudBoard;
+    }
+    function isVip(nick) {
+      const board = boardState();
+      return nick === "PETCH" || (board.highlights || []).indexOf(nick) >= 0;
+    }
+    function toggleVip(nick) {
+      if (!isAdmin() || nick === "PETCH") return;
+      const board = boardState();
+      const i = board.highlights.indexOf(nick);
+      if (i >= 0) board.highlights.splice(i, 1);
+      else board.highlights.push(nick);
+      saveBoard(board);
+      renderChat();
+    }
+    function currentNick() {
+      return isAdmin() ? "PETCH" : (guest.nick || "");
+    }
+    function currentProfile() {
+      const board = boardState();
+      const nick = currentNick();
+      const saved = board.profiles[nick] || {};
+      return {
+        nick: nick,
+        name: saved.name || (isAdmin() ? "PETCH" : guest.nick || "ผู้ชม"),
+        room: saved.room || guest.room || (isAdmin() ? "ADMIN" : "-"),
+        avatar: saved.avatar || ""
+      };
+    }
+
+    async function sha256(text) {
+      const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+      return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
+    }
+
+    function isAdmin() {
+      return role === "admin" && sessionStorage.getItem(KEYS.sess) === CRED_HASH && !!writeKey;
+    }
+
+    function sanitizeName(text) {
+      return String(text || "").replace(/[<>&"'`]/g, "").trim().slice(0, 24);
+    }
+
+    function setGreeting(prefix, name, extra) {
+      greetLine.replaceChildren();
+      greetLine.append(document.createTextNode(prefix + " "));
+      const strong = document.createElement("b");
+      strong.textContent = name;
+      greetLine.append(strong);
+      if (extra) greetLine.append(document.createTextNode(extra));
+    }
+
+    function unlockWriteKey() {
+      try {
+        writeKey = atob("NTIwZTg3YTktMTliMi00ZWEyLTk5ZDEtOGVmOTA3MjExMTBl");
+      } catch (err) {
+        writeKey = "";
+      }
+    }
+
+    async function nickKey(nick) {
+      const hash = await sha256("lock:" + String(nick || "").trim().toLowerCase());
+      return "n" + hash.slice(0, 15);
+    }
+
+    async function readLock(nick) {
+      unlockWriteKey();
+      const key = await nickKey(nick);
+      const res = await fetch(CLOUD.base + "/get/" + CLOUD.ns + "/" + key);
+      if (!res.ok) return 0;
+      const data = await res.json();
+      return Number(data.value || 0);
+    }
+
+    async function writeLock(nick, value) {
+      unlockWriteKey();
+      const key = await nickKey(nick);
+      let res = await fetch(
+        CLOUD.base + "/set/" + CLOUD.ns + "/" + key + "?value=" + value,
+        { method: "POST", headers: { Authorization: "Bearer " + writeKey } }
+      );
+      if (res.status === 404 || res.status === 400) {
+        await fetch(CLOUD.base + "/create/" + CLOUD.ns + "/" + key + "?initializer=" + value);
+        res = await fetch(
+          CLOUD.base + "/set/" + CLOUD.ns + "/" + key + "?value=" + value,
+          { method: "POST", headers: { Authorization: "Bearer " + writeKey } }
+        );
+      }
+      return res.ok;
+    }
+
+    async function claimNick(nick) {
+      const mine = localStorage.getItem("petch_my_nick");
+      if (mine && mine === nick) {
+        await writeLock(nick, Math.floor(Date.now() / 1000));
+        return true;
+      }
+      const last = await readLock(nick);
+      const now = Math.floor(Date.now() / 1000);
+      if (last && now - last < 45) return false;
+      await writeLock(nick, now);
+      localStorage.setItem("petch_my_nick", nick);
+      return true;
+    }
+
+    async function releaseNick(nick) {
+      if (!nick) return;
+      if (localStorage.getItem("petch_my_nick") === nick) {
+        await writeLock(nick, 0);
+        localStorage.removeItem("petch_my_nick");
+      }
+    }
+
+    function startHeart() {
+      stopHeart();
+      heartTimer = setInterval(async () => {
+        const nick = currentNick();
+        if (!nick || isAdmin()) return;
+        await writeLock(nick, Math.floor(Date.now() / 1000));
+      }, 15000);
+    }
+    function stopHeart() {
+      if (heartTimer) { clearInterval(heartTimer); heartTimer = null; }
+    }
+
+    function pruneBoard() {
+      const board = boardState();
+      const now = Date.now();
+      const keep = [];
+      board.messages.forEach((m) => {
+        if (m.deleted || now - m.ts >= TWO_DAYS) {
+          board.archive.unshift(m);
+        } else keep.push(m);
+      });
+      board.messages = keep.slice(-80);
+      board.archive = board.archive.slice(0, 200);
+      saveBoard(board);
+      return board;
+    }
+
+    function letterAv(name) {
+      const box = document.createElement("div");
+      box.className = "av";
+      box.textContent = String(name || "?").slice(0, 1).toUpperCase();
+      return box;
+    }
+
+    function avatarNode(profile) {
+      if (profile.avatar) {
+        const img = document.createElement("img");
+        img.className = "av";
+        img.alt = "";
+        img.src = profile.avatar;
+        return img;
+      }
+      return letterAv(profile.name || profile.nick);
+    }
+
+    function applyBadgeStyle() {
+      const ui = JSON.parse(localStorage.getItem(CHAT_UI_KEY) || "{}");
+      const el = document.getElementById("chatCount");
+      el.style.fontSize = (ui.size || 13) + "px";
+      el.style.color = "#2a1408";
+      el.style.background = ui.color || "#ffb703";
+    }
+
+    function renderChat() {
+      const board = pruneBoard();
+      const log = document.getElementById("chatLog");
+      const countEl = document.getElementById("chatCount");
+      log.replaceChildren();
+      const visible = board.messages.filter((m) => !m.deleted);
+      countEl.textContent = String(visible.length);
+      applyBadgeStyle();
+      visible.forEach((m) => {
+        const row = document.createElement("div");
+        row.className = "msg";
+        row.append(avatarNode(m));
+        const bubble = document.createElement("div");
+        bubble.className = "bubble";
+        if (isVip(m.nick)) row.classList.add("vip");
+        const who = document.createElement("button");
+        who.className = "who";
+        who.type = "button";
+        who.textContent = (m.nick === "PETCH" ? "👑 " : "") + m.name + " · " + m.room;
+        who.addEventListener("click", () => openView(m));
+        const txt = document.createElement("div");
+        txt.className = "txt";
+        txt.textContent = m.text;
+        const meta = document.createElement("div");
+        meta.className = "meta";
+        meta.textContent = new Date(m.ts).toLocaleString("th-TH", { timeZone: "Asia/Bangkok" });
+        if (isAdmin()) {
+          const del = document.createElement("button");
+          del.type = "button";
+          del.className = "who";
+          del.textContent = " ลบ";
+          del.addEventListener("click", () => deleteMsg(m.id));
+          meta.append(del);
+          if (m.nick !== "PETCH") {
+            const vipBtn = document.createElement("button");
+            vipBtn.type = "button";
+            vipBtn.className = "who";
+            vipBtn.textContent = isVip(m.nick) ? " เอาไฮไลต์ออก" : " ให้ไฮไลต์";
+            vipBtn.addEventListener("click", () => toggleVip(m.nick));
+            meta.append(vipBtn);
+          }
+        }
+        bubble.append(who, txt, meta);
+        row.append(bubble);
+        log.append(row);
+      });
+      log.scrollTop = log.scrollHeight;
+      document.getElementById("archiveBtn").classList.toggle("hidden", !isAdmin());
+    }
+
+    function renderArchive() {
+      const board = boardState();
+      const log = document.getElementById("archiveLog");
+      log.replaceChildren();
+      board.archive.forEach((m) => {
+        const row = document.createElement("div");
+        row.className = "msg deleted";
+        const txt = document.createElement("div");
+        txt.className = "txt";
+        txt.textContent = (m.name || m.nick) + ": " + m.text;
+        row.append(txt);
+        log.append(row);
+      });
+    }
+
+    function deleteMsg(id) {
+      if (!isAdmin()) return;
+      const board = boardState();
+      const found = board.messages.find((m) => m.id === id);
+      if (!found) return;
+      found.deleted = true;
+      board.archive.unshift(found);
+      board.messages = board.messages.filter((m) => m.id !== id);
+      saveBoard(board);
+      renderChat();
+    }
+
+    function openView(person) {
+      const board = boardState();
+      const prof = board.profiles[person.nick] || person;
+      const img = document.getElementById("viewAv");
+      if (prof.avatar) {
+        img.src = prof.avatar;
+        img.style.display = "block";
+      } else {
+        img.removeAttribute("src");
+        img.style.display = "none";
+      }
+      document.getElementById("viewName").textContent = prof.name || person.name || person.nick;
+      document.getElementById("viewMeta").textContent = "ห้อง " + (prof.room || person.room || "-");
+      document.getElementById("viewModal").classList.add("show");
+    }
+
+    function resizeImage(file) {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const img = new Image();
+          img.onload = () => {
+            const c = document.createElement("canvas");
+            c.width = 96; c.height = 96;
+            c.getContext("2d").drawImage(img, 0, 0, 96, 96);
+            resolve(c.toDataURL("image/jpeg", 0.55));
+          };
+          img.src = reader.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function formatNum(n) {
+      return Number(n).toLocaleString("en-US");
+    }
+
+    function thaiNow() {
+      return new Date().toLocaleString("th-TH", {
+        timeZone: "Asia/Bangkok",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false
+      });
+    }
+
+    function updateClock() {
+      if (role === "guest") {
+        timeLine.textContent = "เวลา " + thaiNow();
+      } else {
+        timeLine.textContent = "เวลาไทย " + thaiNow();
+      }
+    }
+
+    function cacheLocal() {
+      localStorage.setItem(KEYS.count, String(count));
+      localStorage.setItem(KEYS.auto, autoOn ? "1" : "0");
+    }
+
+    function setHint(text) {
+      syncHint.textContent = text;
+    }
+
+    function render() {
+      countView.textContent = formatNum(count);
+      countView.classList.remove("pulse");
+      void countView.offsetWidth;
+      countView.classList.add("pulse");
+      if (setInput) setInput.value = count;
+      cacheLocal();
+      if (count <= 0 && !celebrating) showGoal();
+    }
+
+    function applyServerValue(n) {
+      const next = Math.max(0, Math.floor(Number(n) || 0));
+      if (next === count) return;
+      count = next;
+      render();
+    }
+
+    async function cloudGet() {
+      const res = await fetch(CLOUD.base + "/get/" + CLOUD.ns + "/" + CLOUD.key);
+      if (!res.ok) throw new Error("get failed");
+      return (await res.json()).value;
+    }
+
+    async function cloudSet(n) {
+      if (!isAdmin()) throw new Error("forbidden");
+      const value = Math.max(0, Math.floor(Number(n) || 0));
+      const res = await fetch(
+        CLOUD.base + "/set/" + CLOUD.ns + "/" + CLOUD.key + "?value=" + value,
+        { method: "POST", headers: { Authorization: "Bearer " + writeKey } }
+      );
+      if (!res.ok) throw new Error("set failed");
+      return (await res.json()).value;
+    }
+
+    async function cloudUpdate(by) {
+      if (!isAdmin()) throw new Error("forbidden");
+      const res = await fetch(
+        CLOUD.base + "/update/" + CLOUD.ns + "/" + CLOUD.key + "?value=" + by,
+        { method: "POST", headers: { Authorization: "Bearer " + writeKey } }
+      );
+      if (!res.ok) throw new Error("update failed");
+      return (await res.json()).value;
+    }
+
+    async function refreshFromCloud() {
+      try {
+        applyServerValue(await cloudGet());
+        setHint("ซิงค์แล้ว ทุกเครื่องเห็นเลขเดียวกัน");
+      } catch (err) {
+        setHint("ออฟไลน์ชั่วคราว ใช้เลขในเครื่องไปก่อน");
+      }
+    }
+
+    async function changeBy(by) {
+      if (!isAdmin()) return;
+      if (celebrating && by < 0) return;
+      if (busy) return;
+      busy = true;
+      if (celebrating && by > 0) {
+        celebrating = false;
+        goalEl.classList.remove("show");
+      }
+      count = Math.max(0, count + by);
+      render();
+      try {
+        applyServerValue(await cloudUpdate(by));
+        setHint("บันทึกบนคลาวด์แล้ว");
+      } catch (err) {
+        setHint("เซฟคลาวด์ไม่ติด ลองกดใหม่");
+      } finally {
+        busy = false;
+      }
+    }
+
+    async function overwrite(n) {
+      if (!isAdmin()) return;
+      if (busy) return;
+      busy = true;
+      celebrating = false;
+      goalEl.classList.remove("show");
+      count = Math.max(0, Math.floor(Number(n) || 0));
+      render();
+      try {
+        applyServerValue(await cloudSet(count));
+        setHint("ตั้งค่าแล้ว ทุกเครื่องอัปเดตด้วย");
+      } catch (err) {
+        setHint("ตั้งค่าคลาวด์ไม่ติด ลองใหม่");
+      } finally {
+        busy = false;
+      }
+    }
+
+    function hideAll() {
+      loginCard.classList.add("hidden");
+      guestCard.classList.add("hidden");
+      appCard.classList.add("hidden");
+    }
+
+    function paintGreeting() {
+      if (isAdmin()) {
+        setGreeting("ยินดีต้อนรับ", "👑 PETCH", "");
+        adminOnly.classList.remove("hidden");
+        guestNote.classList.add("hidden");
+      } else {
+        setGreeting("สวัสดี", guest.nick || "ผู้ชม", " ห้อง " + (guest.room || "-"));
+        adminOnly.classList.add("hidden");
+        guestNote.classList.remove("hidden");
+      }
+      updateClock();
+    }
+
+    function showApp() {
+      hideAll();
+      appCard.classList.remove("hidden");
+      loadState();
+      paintGreeting();
+      refreshFromCloud();
+      startPoll();
+      startClock();
+      startHeart();
+      pullBoard().then(() => renderChat());
+      if (isAdmin() && autoOn && count > 0) startAuto();
+    }
+
+    function showLogin() {
+      stopAuto();
+      stopPoll();
+      stopClock();
+      stopHeart();
+      hideAll();
+      loginCard.classList.remove("hidden");
+    }
+
+    function showGuest() {
+      stopAuto();
+      stopPoll();
+      stopClock();
+      hideAll();
+      guestCard.classList.remove("hidden");
+    }
+
+    function loadState() {
+      const saved = localStorage.getItem(KEYS.count);
+      count = saved === null ? DEFAULT_COUNT : Math.max(0, parseInt(saved, 10) || 0);
+      autoOn = localStorage.getItem(KEYS.auto) === "1";
+      autoSwitch.classList.toggle("on", autoOn);
+      celebrating = false;
+      goalEl.classList.remove("show");
+      render();
+    }
+
+    function startAuto() {
+      stopAuto();
+      timer = setInterval(() => {
+        if (!isAdmin() || !autoOn || celebrating || count <= 0) return;
+        changeBy(-1);
+      }, 2000);
+    }
+    function stopAuto() {
+      if (timer) { clearInterval(timer); timer = null; }
+    }
+    function startPoll() {
+      stopPoll();
+      pollTimer = setInterval(() => { if (!busy) refreshFromCloud(); }, 3000);
+    }
+    function stopPoll() {
+      if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+    }
+    function startClock() {
+      stopClock();
+      clockTimer = setInterval(updateClock, 1000);
+    }
+    function stopClock() {
+      if (clockTimer) { clearInterval(clockTimer); clockTimer = null; }
+    }
+
+    function showGoal() {
+      celebrating = true;
+      stopAuto();
+      count = 0;
+      cacheLocal();
+      render();
+      goalEl.classList.add("show");
+      burstConfetti();
+    }
+
+    loginForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const u = document.getElementById("user").value.trim();
+      const p = document.getElementById("pass").value;
+      const hash = await sha256(u + "|" + p);
+      if (hash === CRED_HASH) {
+        role = "admin";
+        unlockWriteKey();
+        sessionStorage.setItem(KEYS.sess, hash);
+        localStorage.removeItem("petch_role");
+        localStorage.removeItem("petch_logged_in");
+        loginError.style.display = "none";
+        showApp();
+      } else {
+        role = "guest";
+        writeKey = "";
+        sessionStorage.removeItem(KEYS.sess);
+        loginError.style.display = "block";
+      }
+    });
+
+    guestForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const nick = sanitizeName(document.getElementById("nick").value);
+      const room = roomInput.value.trim();
+      if (!nick || !/^([1-6])\/([1-8])$/.test(room)) {
+        guestError.style.display = "block";
+        return;
+      }
+      const ok = await claimNick(nick);
+      if (!ok) {
+        guestError.style.display = "block";
+        guestError.textContent = "ชื่อนี้มีเครื่องอื่นใช้อยู่ ลองชื่อใหม่หรือรอสักครู่";
+        return;
+      }
+      guestError.style.display = "none";
+      guest = { nick: nick, room: room };
+      role = "guest";
+      sessionStorage.removeItem(KEYS.sess);
+      localStorage.setItem(KEYS.guest, JSON.stringify(guest));
+      const board = boardState();
+      if (!board.profiles[nick]) {
+        board.profiles[nick] = { name: nick, room: room, avatar: "", ts: Date.now() };
+        saveBoard(board);
+      }
+      showApp();
+    });
+
+    (function fillRooms() {
+      for (let y = 1; y <= 6; y++) {
+        for (let r = 1; r <= 8; r++) {
+          const opt = document.createElement("option");
+          opt.value = y + "/" + r;
+          opt.textContent = y + "/" + r;
+          roomInput.appendChild(opt);
+        }
+      }
+    })();
+
+    function applyTheme(name) {
+      const themes = ["amber", "ocean", "grape", "mint", "light"];
+      const theme = themes.indexOf(name) >= 0 ? name : "amber";
+      document.body.setAttribute("data-theme", theme);
+      localStorage.setItem(KEYS.theme, theme);
+      document.querySelectorAll("#swatches button").forEach((btn) => {
+        btn.classList.toggle("active", btn.getAttribute("data-theme") === theme);
+      });
+    }
+    document.getElementById("swatches").addEventListener("click", (e) => {
+      const btn = e.target.closest("button[data-theme]");
+      if (btn) applyTheme(btn.getAttribute("data-theme"));
+    });
+    applyTheme(localStorage.getItem(KEYS.theme) || "amber");
+
+    document.getElementById("chatForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const input = document.getElementById("chatInput");
+      const text = String(input.value || "").trim().slice(0, 200);
+      if (!text || !currentNick()) return;
+      const prof = currentProfile();
+      const board = boardState();
+      board.messages.push({
+        id: Date.now() + "-" + Math.random().toString(16).slice(2),
+        nick: prof.nick,
+        name: prof.name,
+        room: prof.room,
+        text: text,
+        avatar: prof.avatar,
+        ts: Date.now(),
+        deleted: false
+      });
+      saveBoard(board);
+      input.value = "";
+      renderChat();
+    });
+
+    document.getElementById("profileBtn").addEventListener("click", () => {
+      const prof = currentProfile();
+      document.getElementById("displayName").value = prof.name;
+      const img = document.getElementById("avPreview");
+      if (prof.avatar) img.src = prof.avatar;
+      else img.removeAttribute("src");
+      const ui = JSON.parse(localStorage.getItem(CHAT_UI_KEY) || "{}");
+      document.getElementById("badgeSize").value = ui.size || 13;
+      document.getElementById("badgeColor").value = ui.color || "#ffb703";
+      document.getElementById("profileModal").classList.add("show");
+    });
+    document.getElementById("closeProfileBtn").addEventListener("click", () => {
+      document.getElementById("profileModal").classList.remove("show");
+    });
+    document.getElementById("avatarFile").addEventListener("change", async (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const url = await resizeImage(file);
+      document.getElementById("avPreview").src = url;
+      document.getElementById("avPreview").dataset.pending = url;
+    });
+    document.getElementById("saveProfileBtn").addEventListener("click", () => {
+      const nick = currentNick();
+      if (!nick) return;
+      const board = boardState();
+      const prev = board.profiles[nick] || {};
+      board.profiles[nick] = {
+        name: sanitizeName(document.getElementById("displayName").value) || nick,
+        room: isAdmin() ? "ADMIN" : guest.room,
+        avatar: document.getElementById("avPreview").dataset.pending || prev.avatar || "",
+        ts: Date.now()
+      };
+      saveBoard(board);
+      localStorage.setItem(CHAT_UI_KEY, JSON.stringify({
+        size: Math.min(28, Math.max(10, Number(document.getElementById("badgeSize").value) || 13)),
+        color: document.getElementById("badgeColor").value || "#ffb703"
+      }));
+      document.getElementById("profileModal").classList.remove("show");
+      renderChat();
+    });
+    document.getElementById("closeViewBtn").addEventListener("click", () => {
+      document.getElementById("viewModal").classList.remove("show");
+    });
+    document.getElementById("archiveBtn").addEventListener("click", () => {
+      if (!isAdmin()) return;
+      renderArchive();
+      document.getElementById("archiveModal").classList.add("show");
+    });
+    document.getElementById("closeArchiveBtn").addEventListener("click", () => {
+      document.getElementById("archiveModal").classList.remove("show");
+    });
+    window.addEventListener("storage", (e) => {
+      if (e.key === BOARD_KEY) renderChat();
+    });
+    try {
+      new BroadcastChannel("petch-board").addEventListener("message", () => renderChat());
+    } catch (e) {}
+    setInterval(() => {
+      if (!appCard.classList.contains("hidden")) pullBoard().then(() => renderChat());
+    }, 4000);
+
+    document.getElementById("toGuestBtn").addEventListener("click", showGuest);
+    document.getElementById("backLoginBtn").addEventListener("click", showLogin);
+
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+      if (!isAdmin()) await releaseNick(guest.nick);
+      role = "guest";
+      writeKey = "";
+      sessionStorage.removeItem(KEYS.sess);
+      showLogin();
+    });
+
+    document.getElementById("hitBtn").addEventListener("click", () => changeBy(-1));
+    document.getElementById("minusBtn").addEventListener("click", () => changeBy(-1));
+    document.getElementById("plusBtn").addEventListener("click", () => changeBy(1));
+    document.getElementById("setBtn").addEventListener("click", () => overwrite(setInput.value));
+    document.getElementById("resetBtn").addEventListener("click", () => overwrite(DEFAULT_COUNT));
+    document.getElementById("againBtn").addEventListener("click", () => {
+      if (!isAdmin()) {
+        goalEl.classList.remove("show");
+        return;
+      }
+      overwrite(DEFAULT_COUNT).then(() => {
+        if (autoOn) startAuto();
+      });
+    });
+
+    autoSwitch.addEventListener("click", () => {
+      if (!isAdmin()) return;
+      autoOn = !autoOn;
+      autoSwitch.classList.toggle("on", autoOn);
+      cacheLocal();
+      if (autoOn && count > 0 && !celebrating) startAuto();
+      else stopAuto();
+    });
+
+    const canvas = document.getElementById("confetti");
+    const ctx = canvas.getContext("2d");
+    let pieces = [];
+    function resize() {
+      canvas.width = innerWidth;
+      canvas.height = innerHeight;
+    }
+    addEventListener("resize", resize);
+    resize();
+
+    function burstConfetti() {
+      pieces = [];
+      const colors = ["#ffb703", "#ff7a18", "#ffe7c2", "#7dffb0", "#ffffff"];
+      for (let i = 0; i < 160; i++) {
+        pieces.push({
+          x: Math.random() * canvas.width,
+          y: -20 - Math.random() * 80,
+          r: 3 + Math.random() * 5,
+          c: colors[i % colors.length],
+          vx: -2 + Math.random() * 4,
+          vy: 2 + Math.random() * 4,
+          a: Math.random() * Math.PI
+        });
+      }
+      let frames = 0;
+      function tick() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        pieces.forEach((p) => {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.a += 0.08;
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.a);
+          ctx.fillStyle = p.c;
+          ctx.fillRect(-p.r, -p.r / 2, p.r * 2, p.r);
+          ctx.restore();
+        });
+        frames++;
+        if (frames < 180) requestAnimationFrame(tick);
+        else ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+      tick();
+    }
+
+    (function boot() {
+      try {
+        const savedGuest = JSON.parse(localStorage.getItem(KEYS.guest) || "{}");
+        if (savedGuest.nick && savedGuest.room) {
+          guest = {
+            nick: sanitizeName(savedGuest.nick),
+            room: String(savedGuest.room)
+          };
+        }
+      } catch (e) {}
+
+      if (sessionStorage.getItem(KEYS.sess) === CRED_HASH) {
+        role = "admin";
+        unlockWriteKey();
+        showApp();
+        return;
+      }
+
+      role = "guest";
+      writeKey = "";
+      if (guest.nick && /^([1-6])\/([1-8])$/.test(guest.room)) showApp();
+    })();
+  </script>
+</body>
+</html>
+      --panel: rgba(36, 16, 46, 0.84);
+      --line: rgba(220, 160, 255, 0.22);
+      --text: #f6eaff;
+      --muted: #c3a4d6;
+      --gold: #d946ef;
+      --accent: #a855f7;
+      --cream: #f3d9ff;
+      --ok: #7dffb0;
+      --danger: #ff6b6b;
+    }
+    body[data-theme="mint"] {
+      --bg: #07140f;
+      --panel: rgba(12, 36, 28, 0.84);
+      --line: rgba(140, 255, 200, 0.22);
+      --text: #e9fff6;
+      --muted: #95c7b4;
+      --gold: #34d399;
+      --accent: #10b981;
+      --cream: #d7ffef;
+      --ok: #7dffb0;
+      --danger: #ff6b6b;
+    }
+    body[data-theme="light"] {
+      --bg: #f4efe6;
+      --panel: rgba(255, 252, 246, 0.9);
+      --line: rgba(160, 120, 70, 0.25);
+      --text: #3a2716;
+      --muted: #8a6a4e;
+      --gold: #e39b00;
+      --accent: #d97706;
+      --cream: #7a4f20;
+      --ok: #059669;
+      --danger: #dc2626;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100%; }
+    body {
+      font-family: "Prompt", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(900px 500px at 10% -10%, rgba(255, 183, 3, 0.16), transparent 55%),
+        radial-gradient(800px 500px at 110% 10%, rgba(255, 90, 20, 0.16), transparent 50%),
+        radial-gradient(700px 380px at 50% 120%, rgba(255, 210, 140, 0.1), transparent 50%),
+        var(--bg);
+      overflow-x: hidden;
+    }
+
+    .glow {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        radial-gradient(2px 2px at 30px 40px, #ffd9a0, transparent),
+        radial-gradient(1px 1px at 120px 90px, #fff, transparent),
+        radial-gradient(1.5px 1.5px at 200px 160px, #ffb703, transparent);
+      background-size: 360px 220px;
+      opacity: 0.28;
+      z-index: 0;
+    }
+
+    .wrap {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px 16px;
+    }
+
+    .card {
+      width: min(560px, 100%);
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      padding: 28px 24px 24px;
+      box-shadow: 0 20px 80px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255,255,255,0.06);
+      backdrop-filter: blur(16px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 22px;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+    }
+    .dot {
+      width: 12px; height: 12px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold), var(--accent));
+      box-shadow: 0 0 16px var(--gold);
+    }
+    .chip {
+      font-size: 12px;
+      color: var(--gold);
+      border: 1px solid rgba(255, 183, 3, 0.35);
+      background: rgba(255, 183, 3, 0.08);
+      padding: 4px 10px;
+      border-radius: 999px;
+    }
+
+    h1 { font-size: 28px; line-height: 1.2; margin-bottom: 6px; }
+    .sub { color: var(--muted); margin-bottom: 22px; font-size: 14px; }
+
+    label { display: block; font-size: 13px; color: var(--muted); margin: 0 0 6px 4px; }
+    input[type="text"], input[type="password"], input[type="number"], select {
+      width: 100%;
+      background: rgba(20, 10, 6, 0.72);
+      border: 1px solid var(--line);
+      color: var(--text);
+      border-radius: 14px;
+      padding: 13px 14px;
+      font-size: 16px;
+      font-family: inherit;
+      outline: none;
+      margin-bottom: 14px;
+    }
+    input:focus, select:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(255, 183, 3, 0.16);
+    }
+    select {
+      appearance: none;
+      background-image: linear-gradient(45deg, transparent 50%, #ffb703 50%), linear-gradient(135deg, #ffb703 50%, transparent 50%);
+      background-position: calc(100% - 20px) calc(1.1em + 2px), calc(100% - 14px) calc(1.1em + 2px);
+      background-size: 6px 6px, 6px 6px;
+      background-repeat: no-repeat;
+    }
+
+    .btn {
+      appearance: none;
+      border: 0;
+      cursor: pointer;
+      font-family: inherit;
+      font-weight: 600;
+      border-radius: 16px;
+      transition: transform .12s ease, filter .12s ease;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary {
+      width: 100%;
+      padding: 14px 16px;
+      color: #2a1408;
+      background: linear-gradient(135deg, var(--gold), var(--accent));
+      box-shadow: 0 10px 30px rgba(255, 122, 24, 0.28);
+      font-size: 16px;
+    }
+    .btn-ghost {
+      background: transparent;
+      color: var(--muted);
+      padding: 8px 10px;
+      font-size: 13px;
+    }
+    .btn-danger {
+      background: rgba(255, 107, 107, 0.12);
+      color: #ffb4b4;
+      border: 1px solid rgba(255, 107, 107, 0.25);
+      padding: 8px 12px;
+      font-size: 13px;
+    }
+    .btn-link {
+      display: block;
+      width: 100%;
+      margin-top: 16px;
+      padding: 12px 10px;
+      background: transparent;
+      color: var(--cream);
+      border: 1px dashed rgba(255, 186, 120, 0.35);
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .error {
+      display: none;
+      color: var(--danger);
+      background: rgba(255, 107, 107, 0.1);
+      border: 1px solid rgba(255, 107, 107, 0.25);
+      padding: 10px 12px;
+      border-radius: 12px;
+      margin-bottom: 14px;
+      font-size: 14px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .hello { font-size: 14px; color: var(--muted); line-height: 1.45; }
+    .hello b { color: var(--gold); font-weight: 600; }
+    .hello .time { display: block; color: var(--cream); font-size: 13px; margin-top: 2px; }
+
+    .counter-box { text-align: center; padding: 18px 8px 8px; }
+    .label-remain {
+      font-size: 13px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .number {
+      font-family: "Orbitron", sans-serif;
+      font-weight: 800;
+      font-size: clamp(52px, 14vw, 84px);
+      letter-spacing: 2px;
+      background: linear-gradient(180deg, #fff 8%, var(--gold) 70%, var(--accent));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      line-height: 1;
+    }
+    .number.pulse { animation: pulse 0.25s ease; }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.04); }
+      100% { transform: scale(1); }
+    }
+
+    .hit {
+      width: 100%;
+      margin: 22px 0 14px;
+      padding: 22px 16px;
+      font-size: 28px;
+      color: #2a1408;
+      background: linear-gradient(135deg, var(--gold), var(--accent));
+      box-shadow: 0 16px 40px rgba(255, 122, 24, 0.25);
+      border-radius: 22px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .adj {
+      padding: 14px;
+      font-size: 18px;
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+      border: 1px solid var(--line);
+    }
+    .set-row { display: flex; gap: 8px; margin-bottom: 14px; }
+    .set-row input { margin: 0; }
+    .set-row .btn {
+      white-space: nowrap;
+      padding: 0 16px;
+      background: rgba(255, 183, 3, 0.12);
+      color: var(--gold);
+      border: 1px solid rgba(255, 183, 3, 0.25);
+    }
+
+    .tools {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding-top: 6px;
+    }
+    .toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 14px;
+      user-select: none;
+    }
+    .switch {
+      width: 44px; height: 26px; border-radius: 999px;
+      background: #2a1a12;
+      border: 1px solid var(--line);
+      position: relative;
+      cursor: pointer;
+    }
+    .switch i {
+      position: absolute; top: 3px; left: 3px;
+      width: 18px; height: 18px; border-radius: 50%;
+      background: #a8876e;
+      transition: 0.18s ease;
+    }
+    .switch.on { background: rgba(125, 255, 176, 0.16); border-color: rgba(125, 255, 176, 0.4); }
+    .switch.on i { left: 21px; background: var(--ok); }
+
+    .hint { margin-top: 14px; font-size: 12px; color: #b08968; text-align: center; }
+    .guest-note {
+      margin-top: 14px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .admin-only.hidden, .hidden { display: none !important; }
+
+    .goal {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: none;
+      place-items: center;
+      background: rgba(16, 8, 4, 0.82);
+      padding: 20px;
+    }
+    .goal.show { display: grid; }
+    .goal-card {
+      width: min(520px, 100%);
+      text-align: center;
+      background: linear-gradient(180deg, rgba(48, 28, 10, 0.96), rgba(18, 10, 6, 0.96));
+      border: 1px solid rgba(255, 183, 3, 0.4);
+      border-radius: 28px;
+      padding: 36px 24px 28px;
+      box-shadow: 0 0 80px rgba(255, 183, 3, 0.18);
+      animation: pop 0.45s ease;
+    }
+    @keyframes pop {
+      from { transform: scale(0.86); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .trophy { font-size: 72px; line-height: 1; }
+    .goal-card h2 {
+      font-family: "Orbitron", sans-serif;
+      font-size: clamp(42px, 12vw, 64px);
+      color: var(--gold);
+      margin: 8px 0 6px;
+    }
+    .goal-card p { color: #ffe7c2; margin-bottom: 20px; }
+    canvas#confetti {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 21;
+    }
+
+    .theme-bar {
+      width: min(560px, 100%);
+      margin-top: 14px;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--panel);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .theme-bar span { font-size: 12px; color: var(--muted); }
+    .swatches { display: flex; gap: 8px; }
+    .swatches button {
+      width: 22px; height: 22px; border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.4);
+      cursor: pointer;
+    }
+    .swatches button[data-theme="amber"] { background: #ffb703; }
+    .swatches button[data-theme="ocean"] { background: #5ce1ff; }
+    .swatches button[data-theme="grape"] { background: #d946ef; }
+    .swatches button[data-theme="mint"] { background: #34d399; }
+    .swatches button[data-theme="light"] { background: #f4efe6; border-color: #c9b79a; }
+    .swatches button.active { box-shadow: 0 0 0 2px var(--text); }
+    select option { color: #222; }
+
+    .chat-wrap { margin-top: 16px; border: 1px solid var(--line); border-radius: 18px; overflow: hidden; }
+    .chat-head {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      padding: 10px 12px; background: rgba(0,0,0,0.18);
+    }
+    .chat-title { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+    .chat-count {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 22px; padding: 0 6px; border-radius: 999px; font-weight: 700; line-height: 1.4;
+    }
+    .chat-actions { display: flex; gap: 6px; }
+    .chat-actions .btn { padding: 6px 8px; font-size: 12px; background: rgba(255,255,255,0.06); color: var(--text); border: 1px solid var(--line); }
+    .chat-log { height: 220px; overflow-y: auto; padding: 10px; background: rgba(0,0,0,0.12); }
+    .msg { display: flex; gap: 8px; margin-bottom: 10px; align-items: flex-start; }
+    .msg .av {
+      width: 32px; height: 32px; border-radius: 50%; object-fit: cover; flex: 0 0 32px;
+      background: #5a3b24; display: grid; place-items: center; font-size: 12px; font-weight: 700;
+    }
+    .msg .bubble { flex: 1; }
+    .msg .who { font-size: 12px; color: var(--gold); cursor: pointer; border: 0; background: none; font-family: inherit; padding: 0; }
+    .msg .txt { font-size: 14px; color: var(--text); word-break: break-word; }
+    .msg .meta { font-size: 11px; color: var(--muted); }
+    .msg.deleted .txt { color: var(--muted); font-style: italic; }
     .chat-form { display: flex; gap: 6px; padding: 8px; }
     .chat-form input { margin: 0; }
     .chat-form .btn { white-space: nowrap; padding: 0 12px; background: var(--gold); color: #2a1408; }
