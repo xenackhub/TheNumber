@@ -408,16 +408,15 @@
       padding: 12px 12px 10px;
       position: relative;
     }
-    .count-float {
-      position: absolute;
-      top: 10px;
-      right: 12px;
-      z-index: 4;
+    .count-chip {
       text-align: right;
-      pointer-events: none;
+      line-height: 1.05;
+      flex: 0 0 auto;
+      margin-left: auto;
+      padding: 0 6px;
     }
-    .count-float .label-remain { font-size: 10px; letter-spacing: 1px; margin-bottom: 0; }
-    .count-float .number { font-size: 28px; letter-spacing: 0; }
+    .count-chip .label-remain { font-size: 10px; letter-spacing: 1px; margin-bottom: 0; }
+    .count-chip .number { font-size: 22px; letter-spacing: 0; }
     .chat-wrap {
       margin-top: 8px;
       border: 1px solid var(--line);
@@ -528,14 +527,14 @@
     </section>
 
     <section class="card hidden" id="appCard">
-      <div class="count-float">
-        <div class="label-remain">เหลืออีก</div>
-        <div class="number" id="countView">8,024</div>
-      </div>
       <div class="topbar">
         <div class="hello">
           <span id="greetLine">ยินดีต้อนรับ <b>PETCH</b></span>
           <span class="time" id="timeLine"></span>
+        </div>
+        <div class="count-chip">
+          <div class="label-remain">เหลืออีก</div>
+          <div class="number" id="countView">8,024</div>
         </div>
         <button class="btn btn-danger" id="logoutBtn" type="button">ออก</button>
       </div>
