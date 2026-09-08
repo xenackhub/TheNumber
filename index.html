@@ -467,9 +467,23 @@
       border: 1px solid rgba(255, 183, 3, 0.4);
     }
     .crown { font-size: 13px; }
-    .chat-form { display: flex; gap: 6px; padding: 10px; background: rgba(80,40,120,0.18); }
-    .chat-form input { margin: 0; border-radius: 999px; }
-    .chat-form .btn { white-space: nowrap; padding: 0 16px; border-radius: 999px; background: var(--gold); color: #2a1408; }
+    .chat-form { display: flex; gap: 6px; padding: 10px; background: rgba(80,40,120,0.18); align-items: flex-end; }
+    .chat-form textarea {
+      margin: 0;
+      border-radius: 18px;
+      min-height: 44px;
+      max-height: 96px;
+      resize: none;
+      width: 100%;
+      background: rgba(20, 10, 6, 0.72);
+      border: 1px solid var(--line);
+      color: var(--text);
+      padding: 12px 14px;
+      font-size: 16px;
+      font-family: inherit;
+      outline: none;
+    }
+    .chat-form .btn { white-space: nowrap; padding: 0 16px; height: 44px; border-radius: 999px; background: var(--gold); color: #2a1408; }
     .admin-fold { margin: 8px 0; }
     .admin-fold summary { cursor: pointer; color: var(--muted); font-size: 13px; }
     .modal {
@@ -498,9 +512,9 @@
       <div class="error" id="loginError">ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง</div>
       <form id="loginForm" autocomplete="off">
         <label for="user">ชื่อผู้ใช้</label>
-        <input id="user" type="text" placeholder="User" required />
+        <input id="user" type="text" placeholder="User" autocomplete="username" required />
         <label for="pass">รหัสผ่าน</label>
-        <input id="pass" type="password" placeholder="Password" required />
+        <input id="pass" type="password" placeholder="Password" autocomplete="current-password" required />
         <button class="btn btn-primary" type="submit">เข้าสู่ระบบ</button>
       </form>
       <button class="btn btn-link" id="toGuestBtn" type="button">ถ้าไม่ใช่เพชร คลิกตรงนี้</button>
@@ -516,7 +530,7 @@
       <div class="error" id="guestError">กรอกชื่อเล่น เลือกห้อง หรือชื่อนี้มีคนใช้อยู่บนเครื่องอื่น</div>
       <form id="guestForm" autocomplete="off">
         <label for="nick">ชื่อเล่น</label>
-        <input id="nick" type="text" maxlength="24" placeholder="ชื่อเล่น" required />
+        <input id="nick" type="text" name="guest-nick" maxlength="24" placeholder="ชื่อเล่น" autocomplete="off" required />
         <label for="room">มาจากห้องไหน</label>
         <select id="room" required>
           <option value="">เลือกห้อง</option>
@@ -574,8 +588,8 @@
           </div>
         </div>
         <div class="chat-log" id="chatLog"></div>
-        <form class="chat-form" id="chatForm">
-          <input id="chatInput" type="text" maxlength="200" placeholder="พิมพ์ข้อความ..." />
+        <form class="chat-form" id="chatForm" autocomplete="off">
+          <textarea id="chatInput" maxlength="200" rows="1" placeholder="พิมพ์ข้อความ..." autocomplete="off" autocorrect="on" autocapitalize="sentences" spellcheck="true" enterkeyhint="send"></textarea>
           <button class="btn" type="submit">ส่ง</button>
         </form>
       </div>
@@ -1153,8 +1167,17 @@
       updateClock();
     }
 
+    function setAuthFields(on) {
+      const user = document.getElementById("user");
+      const pass = document.getElementById("pass");
+      user.disabled = !on;
+      pass.disabled = !on;
+      pass.type = on ? "password" : "text";
+    }
+
     function showApp() {
       hideAll();
+      setAuthFields(false);
       appCard.classList.remove("hidden");
       loadState();
       paintGreeting();
@@ -1172,6 +1195,7 @@
       stopClock();
       stopHeart();
       hideAll();
+      setAuthFields(true);
       loginCard.classList.remove("hidden");
     }
 
